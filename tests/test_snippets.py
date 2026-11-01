@@ -28,15 +28,22 @@ NOON = time.strptime("2026-10-25 12:05", "%Y-%m-%d %H:%M")
         ("{{my-var_2}}", [Placeholder("my-var_2")]),
         ("today {{date}} at {{time}} from {{clipboard}}", []),
         ("find . -exec rm {} \\;", []),
-        ("${HOME} {{ spaced }} {{1st}} {{}}", []),
+        ("${HOME} {{ spaced }}", []),
+        ("ls {{~}}", [Placeholder("{{~}}", "~")]),
+        ("ls {{~}} {{~}}", [Placeholder("{{~}}", "~")]),
+        ("cp {{.}} {{/tmp}}", [Placeholder("{{.}}", "."), Placeholder("{{/tmp}}", "/tmp")]),
+        ("{{1st}}", [Placeholder("{{1st}}", "1st")]),
+        ("say {{}}", [Placeholder("{{}}")]),
+        ("{{=x}}", [Placeholder("{{=x}}", "=x")]),
         ('{"a": 1}', []),
         ("{{outer {{inner}} }}", [Placeholder("inner")]),
         ("", []),
     ],
 )
-def test_placeholders_are_double_braced_identifiers(text, expected):
+def test_placeholders_are_double_braced_identifiers_or_unnamed_defaults(text, expected):
     assert placeholders(text) == expected, (
-        "placeholders should be {{identifier}} with an optional =default, unique by name, reserved names excluded"
+        "a placeholder is {{name}} with an optional =default, or {{value}} unnamed and keyed by its own text; "
+        "unique by key, reserved names excluded, anything with spaces left alone"
     )
 
 
@@ -61,6 +68,9 @@ def test_pending_skips_names_that_have_a_value():
         ("{{host=x}} -p {{port}}", {}, "{{host=x}} -p {{port}}"),
         ("rm {} {{date}}", {"date": "2026-10-25"}, "rm {} 2026-10-25"),
         ("{{name}}", {"name": "{{name}}"}, "{{name}}"),
+        ("ls {{~}} {{~}}", {"{{~}}": "/tmp"}, "ls /tmp /tmp"),
+        ("ls {{~}}", {}, "ls {{~}}"),
+        ("say {{}}", {"{{}}": "hi"}, "say hi"),
         ("plain", {"x": "y"}, "plain"),
     ],
 )

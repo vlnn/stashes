@@ -407,7 +407,7 @@ wrap code      | `{{clipboard}}`
 standup        | {{date}} standup: {{done}} / {{next}}
 ```
 
-`{{name}}` is a placeholder; `{{name=value}}` gives it a default, used literally. A name is letters, digits, `_` and `-`, so `{}`, `${VAR}` and JSON are left alone. The same name twice is one placeholder, asked once. Three names fill themselves and are never asked: `{{date}}` is today as `2026-10-25`, `{{time}}` is now as `14:05`, `{{clipboard}}` is the clipboard. You see what date and time become in the subtitle before pressing anything; the clipboard is read only on ↩, so its contents never appear in a results list.
+`{{name}}` is a placeholder; `{{name=value}}` gives it a default, used literally. A name is letters, digits, `_` and `-`. The same name twice is one placeholder, asked once. A placeholder can go unnamed: `{{~}}` is a blank whose default is `~`, offered as `{{~}} (1/1): ~   (default)` and typed over like any other, and `{{}}` is a blank with no default; the text inside has no spaces, so `{}`, `${VAR}`, JSON and `{{ spaced text }}` are left alone. Three names fill themselves and are never asked: `{{date}}` is today as `2026-10-25`, `{{time}}` is now as `14:05`, `{{clipboard}}` is the clipboard. You see what date and time become in the subtitle before pressing anything; the clipboard is read only on ↩, so its contents never appear in a results list.
 
 ↩ on a template with other placeholders opens one prompt per name, in order of first appearance. The title reads `host (2/3): …`, the subtitle shows the payload as it stands, and the rows offer what you have typed, the default, and the clipboard. ↩ takes the selected row and moves on; on the last name ↩ does what the entry would normally do with the finished text: copy, open, or hand off. ⇧↩ pastes instead. Esc abandons with nothing copied.
 
@@ -441,7 +441,7 @@ Only a leading or trailing `@word` counts, so `me@example.com` is copied as text
 
 ```
 downloads     | @term ls -lah ~/Downloads        st dow ↩   →  a Ghostty window with the listing, then a prompt
-list a folder | @term ls -lah {{dir=.}}          st list ↩  →  asks for dir, then lists it
+list a folder | @term ls -lah {{~}}             st list ↩  →  asks where, ~ by default, then lists it
 ```
 
 The subtitle says `Terminal · ls -lah ~/Downloads`; ⇧↩ pastes the bare command, without `@term`. Ghostty is the default; set another terminal in the configuration (below). `@term` needs no macOS permission, and it cannot be aliased or used as a workflow keyword.

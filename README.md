@@ -6,7 +6,7 @@ Fuzzy keyword search over plain-text stashes you own, as an Alfred workflow.
 - **Act**: ↩ copies the payload, or opens it when it is a URL, a path or an Alfred flow; ⇧↩ pastes it.
 - **Add** by typing: whatever you searched for is always offered as a new entry, so a miss is one ↩ away from being stored.
 - **Run** by typing: a hand-off, a link or a `{{blank}}` typed straight into the field gets a *Run* row next to what it found, acting on the text without storing it.
-- **Terminal**: `@term ls -lah {{dir}}` asks for the folder and runs the listing in a new terminal window that stays open, for everything you would rather watch than copy.
+- **Terminal**: `@term ls -lah {{~}}` asks for the folder, `~` by default, and runs the listing in a new terminal window that stays open, for everything you would rather watch than copy.
 - **Own the data**: one line per entry in text files you can edit, grep, sync and keep in git. The format is one rule: everything after the first `|` is the payload; the words before it are what you search by first.
 - **Several stashes** when the list gets long: every `name.txt` in the folder is a stash; `st name/` searches one, and a bare `st` searches all of them.
 - **Dated**: every line you add is stamped with the day, in the line itself (`2026-10-26: …`). `st today/`, `st yesterday/`, `st tomorrow/`, `st week/`, `st next-week/`, `st last-month/`, `st year/` and the rest of that grid are views over every stash by that day; nothing is ever moved, rolled or deleted to make them work. `st tomorrow/ dentist ↩` plans a line a day ahead, and the calendar brings it into `today/`.
@@ -246,7 +246,7 @@ Only a leading or trailing `@word` counts, so `me@example.com` and `mail me@exam
 ```
 downloads     | @term ls -lah ~/Downloads        st dow ↩   →  a Ghostty window with the listing, then a prompt
 logs api      | @term tail -f /var/log/api.log   st logs ↩  →  the log, live
-list a folder | @term ls -lah {{dir=.}}          st list ↩  →  asks for dir, then lists it
+list a folder | @term ls -lah {{~}}             st list ↩  →  asks where, ~ by default, then lists it
 ```
 
 The subtitle says `Terminal · ls -lah ~/Downloads`; ⇧↩ pastes the bare command instead, without `@term`. The terminal is Ghostty by default; set another in the `terminal` variable (see [Configuration](#configuration)). `@term` needs no macOS permission, and it cannot be aliased or used as a workflow keyword.
@@ -366,7 +366,7 @@ wrap code      | `{{clipboard}}`
 standup        | {{date}} standup: {{done}} / {{next}}
 ```
 
-`{{name}}` is a blank; `name` is letters, digits, `_` and `-`, so `{}`, `${VAR}`, `{"a": 1}` and `{{ not a name }}` are left alone. `{{name=value}}` gives it a default, which is used literally (nothing is evaluated). The same name twice is one blank.
+`{{name}}` is a blank; `name` is letters, digits, `_` and `-`. `{{name=value}}` gives it a default, which is used literally (nothing is evaluated). The same name twice is one blank. A blank can also go unnamed: `{{~}}` or `{{.}}` is a blank whose default is the text inside, offered as `{{~}} (1/1): ~   (default)` and typed over like any other, and `{{}}` is a blank with no default. The text inside has no spaces, so `{}`, `${VAR}`, `{"a": 1}` and `{{ not a name }}` are left alone.
 
 Three names fill themselves and are never asked for: `{{date}}` is today as `2026-10-25`, `{{time}}` is now as `14:05`, and `{{clipboard}}` is the clipboard. You see what the first two become before you press anything: the subtitle of a result, and of the *Add* row while you type one, shows the payload with them resolved. The clipboard is read only when you press ↩, so what is on it never shows up in the results list and no search touches it.
 
@@ -607,7 +607,7 @@ git tag v3.1.0 && git push origin v3.1.0
 | `stash/views.py` | The view names as period × offset, their calendar windows (integer day counts, no `datetime`), the age word, the `Horizon` and freshness key |
 | `stash/matching.py` | One regex per query word for the label, substring fallback on the payload, scoring, ranking with the freshness tiebreak |
 | `stash/store.py` | The stashes folder: `default.txt` and the other files; load, append, comment out deleted lines; atomic, symlink-safe writes |
-| `stash/snippets.py` | `{{name}}` and `{{name=default}}` placeholders, the reserved `date`, `time` and `clipboard`, filling |
+| `stash/snippets.py` | `{{name}}`, `{{name=default}}` and unnamed `{{default}}` placeholders, the reserved `date`, `time` and `clipboard`, filling |
 | `stash/alfred.py` | Alfred Script Filter JSON: results and their copy/open/hand-off/fill/resolve action, stash and view rows, the *Run* and *Add* items, prompt rows, hints |
 | `stash/cli.py` | Commands `search`, `add`, `delete`, `edit`, `open`, `alfred`, `prompt`, `resolve`, `fill`; the stamp on add, the view searches; workflow variables |
 | `run.py` | Entry point Alfred calls |

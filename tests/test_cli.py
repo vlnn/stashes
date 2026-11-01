@@ -575,6 +575,14 @@ def test_prompt_last_step_opens_urls_and_hands_off_flows(capsys, env, frozen_clo
     assert flow["variables"] == {"action": "alfred"} and flow["arg"] == "kb delany", "a filled hand-off hands off"
 
 
+def test_prompt_offers_an_unnamed_blank_with_its_default(capsys, env, frozen_clock):
+    [typed, default, clipboard] = prompt(capsys, env, "~/Downloads", "@term ls -lah {{~}}")
+
+    assert default["title"] == "{{~}} (1/1): ~   (default)", "the blank is named by its own text, the default offered"
+    assert default["arg"] == "ls -lah ~", "accepting the default runs the command with it"
+    assert typed["arg"] == "ls -lah ~/Downloads", "typing replaces it"
+
+
 def test_prompt_last_step_sends_a_term_command_to_the_terminal(capsys, env, frozen_clock):
     [item, _] = prompt(capsys, env, "~/Downloads", "@term ls -lah {{dir}}")
 
