@@ -218,6 +218,7 @@ What ↩ does depends on the payload, and the subtitle tells you beforehand (`Op
 | `alfred://runtrigger/<bundle id>/<trigger>/` | runs that workflow's external trigger |
 | `text @keyword` or `@keyword text` | opens Alfred with `keyword text`, so that workflow takes over |
 | `@term command` or `command @term` | runs the command in a new terminal window and leaves it open |
+| `name/ text` (a stash or view, a slash, a space) | adds `text` to that stash or view, as `st name/ text ↩` would |
 | anything containing `{{name}}` | asks for each placeholder first, then does one of the above with the result |
 | anything else | copies it to the clipboard |
 
@@ -364,6 +365,8 @@ A planned line moves through the views as the calendar does and nothing else hap
 ⌘↩ on a view's *Add* row or on a view row opens `default.txt`; ⌘↩ on an entry opens the entry's own file at its line, and ⌥↩ deletes it from there, stamp and all.
 
 **Reserved names.** `today`, `yesterday`, `tomorrow`, `week`, `month`, `quarter`, `year`, `decade`, their `last-` and `next-` forms (`last-week`, `next-week`, `last-month`, `next-month`, `last-quarter`, `next-quarter`, `last-year`, `next-year`) and anything shaped like a date are views, so they cannot be stashes: `st week/ x` ↩ adds to `default.txt`, and no `week.txt` is ever created. If a file with one of those names already exists in the folder, the view wins: `st week/` shows a hint saying the file is hidden behind the view, its lines still turn up in a bare `st` and in whatever views their stamps allow, and renaming the file makes it a stash again.
+
+> **By the way** (templates for entries): a payload that starts with `name/` and a space is an entry to add there, so ↩ stores it rather than copying it, and a blank in it makes a one-question form: `log weight | today/ weight {{90}} kg` ↩ asks for the number, 90 by default, and files `2026-11-01: weight 92 kg` under today; `dentist tomorrow | tomorrow/ dentist at {{09:00}}` stores with tomorrow's stamp; `milk | grocery/ milk | {{2L}}` adds to `grocery.txt`. The template line stays put, each ↩ adds one line, and `st month/ weight` is the series.
 
 > **By the way** (one way to run a day on views): capture into `today/` as things come up, plan ahead into `tomorrow/` and `next-week/`, look at `yesterday/` in the morning, and ⌥↩ what is done. Nothing carries forward by itself; a leftover you still want is one ⇥ ↩ away (⇥ puts its words into the query, ↩ on *Add* stores it again with today's stamp, and the old line stays where it was), or one `st tomorrow/ …` ↩ if it is for tomorrow. `week/` is the plan for the week and, by Friday, its review; `next-week/` is Friday's planning; `month/` the retrospective; and a bare `st` still finds everything, with the age or the date in the subtitle so a stale line is easy to spot.
 

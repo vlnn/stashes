@@ -32,6 +32,10 @@ log it                    | @wisp
 downloads                 | @term ls -lah ~/Downloads
 list a folder             | @term ls -lah {{~}}
 
+# a payload that starts with name/ is an entry to add there: enter asks for the blank, then stores the line
+log weight                | today/ weight {{90}} kg
+dentist tomorrow          | tomorrow/ dentist at {{09:00}}
+
 # text: enter copies
 email work                | name.surname@example.com
 address home              | 221B Baker Street, London NW1 6XE

@@ -6,7 +6,7 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from .entries import SEPARATOR, Entry, has_separator, in_stash, parse_text, split_words
+from .entries import SEPARATOR, STASH_NAME, Entry, has_separator, in_stash, parse_text, split_words
 from .snippets import CLIPBOARD, PLACEHOLDER, Clipboard, Values, fill, has_placeholders, mentions, pending, placeholders
 from .views import is_view
 
@@ -28,8 +28,10 @@ LABELS = {
     "fill": "Fill",
     "resolve": "Copy",
     "terminal": "Terminal",
+    "add": "Add",
 }
 TERMINAL = "term"
+STASH_TARGET = re.compile(rf"^({STASH_NAME.pattern})/\s+(\S.*)$")
 INVALID = {"valid": False}
 
 
@@ -60,7 +62,14 @@ def command_of(payload: str) -> str:
     return command
 
 
+def target_of(payload: str) -> tuple[str, str] | None:
+    found = STASH_TARGET.match(payload)
+    return (found.group(1), found.group(2)) if found else None
+
+
 def action_of(payload: str) -> str:
+    if target_of(payload):
+        return "add"
     if is_terminal(payload):
         return "terminal"
     if flow_of(payload, NO_FLOWS):
@@ -133,6 +142,8 @@ def paste_mod_for(action: str, payload: str) -> Item:
         return resolve_then_paste_mod(payload)
     if action == "terminal":
         return paste_mod(command_of(payload))
+    if action == "add":
+        return paste_mod(target_of(payload)[1])
     return paste_mod(payload)
 
 
@@ -208,6 +219,9 @@ def subtitle_of(label: str, payload: str, action: str, arg: str) -> str:
         return flow_subtitle(payload)
     if action == "terminal":
         return f"{LABELS[action]} · {arg}"
+    if action == "add":
+        stash, text = target_of(payload)
+        return f"{LABELS[action]} to {stash}/ · {text}"
     if action == "fill":
         return f"{LABELS[action]} {names_of(payload)} · {payload}"
     if payload == label:

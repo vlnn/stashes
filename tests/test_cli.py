@@ -583,6 +583,22 @@ def test_prompt_offers_an_unnamed_blank_with_its_default(capsys, env, frozen_clo
     assert typed["arg"] == "ls -lah ~/Downloads", "typing replaces it"
 
 
+def test_a_template_entry_fills_its_blank_and_stores_the_result_under_its_view(capsys, env, db_file, frozen_clock):
+    db_file.write_text("log weight | today/ weight is {{90}} kg\n", encoding="utf-8")
+
+    [found, _] = json.loads(run(capsys, env, "search", "log weight"))["items"]
+    [typed, default, _] = prompt(capsys, env, "92", found["variables"]["template"])
+    output = run(capsys, env, "add", typed["arg"])
+
+    assert found["variables"]["action"] == "fill", "enter asks for the blank first"
+    assert default["title"] == "{{90}} (1/1): 90   (default)", "with the stored number as the default"
+    assert typed["variables"] == {"action": "add"} and typed["arg"] == "today/ weight is 92 kg", "then adds"
+    assert output == "Added: weight is 92 kg", "the add command reports it"
+    assert db_file.read_text(encoding="utf-8").endswith("2026-10-25: weight is 92 kg\n"), (
+        "the filled line is stored in default.txt with today's stamp; the template stays where it was"
+    )
+
+
 def test_prompt_last_step_sends_a_term_command_to_the_terminal(capsys, env, frozen_clock):
     [item, _] = prompt(capsys, env, "~/Downloads", "@term ls -lah {{dir}}")
 

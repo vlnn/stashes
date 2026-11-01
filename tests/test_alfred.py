@@ -58,6 +58,14 @@ def titles(items):
         ("tail -f app.log @term", "terminal"),
         ("@term", "terminal"),
         ("@terminal ls", "alfred"),
+        ("today/ weight is 92 kg", "add"),
+        ("tomorrow/ dentist", "add"),
+        ("grocery/ milk | 2L", "add"),
+        ("2026-12-24/ wrap presents", "add"),
+        ("src/main.py", "copy"),
+        ("today/", "copy"),
+        ("a/b/ c", "copy"),
+        ("and/ or", "add"),
     ],
 )
 def test_action_of_payload_shape(monkeypatch, payload, action):
@@ -96,6 +104,15 @@ FLOWS = {"tally": "t", "kobold": "kb"}
 )
 def test_flow_of_resolves_trailing_at_word_through_aliases(payload, flow):
     assert flow_of(payload, FLOWS) == flow, "a trailing @word names an Alfred keyword, aliases first"
+
+
+def test_entry_item_for_a_stash_prefixed_payload_adds_it_there():
+    item = entry_item(parse_line("dentist tomorrow | tomorrow/ dentist at {{time}}"), reserved={"time": "09:00"})
+
+    assert item["variables"] == {"action": "add"}, "a payload that starts with name/ is an entry to add there"
+    assert item["arg"] == "tomorrow/ dentist at 09:00", "the arg is what the add command expects, prefix included"
+    assert item["subtitle"] == "Add to tomorrow/ · dentist at 09:00", "the subtitle says where it goes"
+    assert item["mods"]["shift"]["arg"] == "dentist at 09:00", "shift pastes the line, without the prefix"
 
 
 def test_entry_item_for_term_runs_the_command_in_a_terminal():

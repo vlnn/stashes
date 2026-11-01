@@ -10,6 +10,7 @@ Fuzzy keyword search over plain-text stashes you own, as an Alfred workflow.
 - **Own the data**: one line per entry in text files you can edit, grep, sync and keep in git. The format is one rule: everything after the first `|` is the payload; the words before it are what you search by first.
 - **Several stashes** when the list gets long: every `name.txt` in the folder is a stash; `st name/` searches one, and a bare `st` searches all of them.
 - **Dated**: every line you add is stamped with the day, in the line itself (`2026-10-26: …`). `st today/`, `st yesterday/`, `st tomorrow/`, `st week/`, `st next-week/`, `st last-month/`, `st year/` and the rest of that grid are views over every stash by that day; nothing is ever moved, rolled or deleted to make them work. `st tomorrow/ dentist ↩` plans a line a day ahead, and the calendar brings it into `today/`.
+- **Forms**: `log weight | today/ weight {{90}} kg` asks for the number on ↩ and files the answer under today, so a stash doubles as a log you fill in one keystroke at a time.
 - **Fill in the blanks**: a payload with `{{host}}` asks for `host` on ↩ and copies, opens or pastes the result; `{{date}}`, `{{time}}` and `{{clipboard}}` fill themselves.
 - **Fast**: no dependencies, built to stay well under Alfred's "instant" threshold for a few thousand entries.
 
@@ -206,6 +207,7 @@ What ↩ does depends on the payload:
 | a path that exists (`~/notes`, `/Users/me/doc.pdf`) | opens it |
 | `text @keyword` or `@keyword text` | opens Alfred with `keyword text`, so another workflow takes over (see below) |
 | `@term command` or `command @term` | runs the command in a new terminal window and leaves it open (see below) |
+| `name/ text` (a stash or view, a slash, a space) | adds `text` to that stash or view, as `st name/ text ↩` would (see [Templates for entries](#templates-for-entries)) |
 | anything with `{{name}}` in it | asks for each name first, then does one of the above with the result (see [Placeholders](#placeholders)) |
 | anything else | copies it to the clipboard |
 
@@ -470,6 +472,20 @@ Until you do, it shows up as a stash called `stash`. If you had pointed `db_file
 ### A keyword per stash
 
 If you want a second keyword that opens straight inside one, copy the Script Filter in Alfred, give it the keyword, and prefix the query in its script: `… run.py search "links/ $1"`.
+
+### Templates for entries
+
+A payload that starts with `name/` and a space is an entry to add there, so ↩ stores it instead of copying it. With a blank in it, the entry becomes a form that asks for one value and files the answer under today:
+
+```
+log weight        | today/ weight {{90}} kg          st log w ↩  →  asks for the number, 90 by default  →  2026-11-01: weight 92 kg
+dentist tomorrow  | tomorrow/ dentist at {{09:00}}   ↩  →  asks for the time, stored with tomorrow's stamp
+mood              | today/ mood {{3}}/5
+decided           | today/ decided: {{}} | because {{}}
+milk              | grocery/ milk | {{2L}}            ↩  →  adds to grocery.txt, no stamp arithmetic needed
+```
+
+The template line stays where it is; each ↩ adds one new line. `st today/` then shows the day's entries and `st month/ weight` the series. The subtitle says `Add to today/ · weight {{90}} kg`, and ⇧↩ pastes the filled line instead of storing it.
 
 ### Sync and history
 
