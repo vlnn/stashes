@@ -113,6 +113,7 @@ notes folder              | ~/notes
 notes open                | alfred://runtrigger/com.example.notes/open/
 
 # hand-offs: enter opens Alfred with the other workflow's keyword (set flows = "books=bk notes=n")
+# @term is reserved: enter runs the rest of the line in a new terminal window
 algorithms book           | algorithms @books
 groceries note            | groceries @notes
 log it                    | @n
@@ -216,6 +217,7 @@ What ↩ does depends on the payload, and the subtitle tells you beforehand (`Op
 | a path that exists (`~/notes`, `/Users/me/doc.pdf`) | opens it |
 | `alfred://runtrigger/<bundle id>/<trigger>/` | runs that workflow's external trigger |
 | `text @keyword` or `@keyword text` | opens Alfred with `keyword text`, so that workflow takes over |
+| `@term command` or `command @term` | runs the command in a new terminal window and leaves it open |
 | anything containing `{{name}}` | asks for each placeholder first, then does one of the above with the result |
 | anything else | copies it to the clipboard |
 
@@ -433,6 +435,17 @@ To write workflow names instead of their keywords, list aliases in the `flows` s
 
 Only a leading or trailing `@word` counts, so `me@example.com` is copied as text. A payload that genuinely begins with a handle (`@here deploying now`) would be read as a hand-off; end it with a full stop or put a word before the handle, or use ⌘C.
 
+### Running a command in a terminal
+
+`@term` is one hand-off Stashes keeps for itself: ↩ on a payload that starts or ends with it opens a new terminal window and runs the rest of the payload there, leaving the window open with the output and a shell. It is for what you would rather watch than copy: `ls`, `tail -f`, `ssh`, a build. Blanks are filled first, as usual:
+
+```
+downloads     | @term ls -lah ~/Downloads        st dow ↩   →  a Ghostty window with the listing, then a prompt
+list a folder | @term ls -lah {{dir=.}}          st list ↩  →  asks for dir, then lists it
+```
+
+The subtitle says `Terminal · ls -lah ~/Downloads`; ⇧↩ pastes the bare command, without `@term`. Ghostty is the default; set another terminal in the configuration (below). `@term` needs no macOS permission, and it cannot be aliased or used as a workflow keyword.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="gifs/hand-off-dark.gif">
   <img src="gifs/hand-off-light.gif" alt="enter hands the words to the @books workflow" width="720">
@@ -463,6 +476,7 @@ All settings live in Alfred: open the workflow and press **Configure Workflow…
 | Max results | `max_results` | `50` | Rows sent to Alfred per keystroke, stash rows and *Add* included. |
 | Python | `python` | `/usr/bin/python3` | Interpreter, 3.9 or newer; absolute path, no `~`. |
 | Flows | `flows` | empty | Aliases for hand-offs as `name=keyword` pairs: `books=bk notes=n`. |
+| Terminal | `terminal` | `open -na Ghostty.app --args -e {shell} -ic "{command}; exec {shell}"` | Command run by ↩ on a `@term` entry; `{command}` and `{shell}` are filled in, and `; exec {shell}` keeps the window open. kitty: `/Applications/kitty.app/Contents/MacOS/kitty {shell} -ic "{command}; exec {shell}"`. |
 | List stashes | `show_stashes` | off | Show every stash row (never the view rows, which need two letters of their name) on a bare `st`. |
 
 **Choosing an editor.** Alfred runs workflows with a minimal `PATH`, so give the full path of the editor's command-line tool, and quote paths with spaces. If the tool cannot be found, ⌘↩ posts a notification saying so.

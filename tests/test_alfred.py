@@ -54,6 +54,10 @@ def titles(items):
         ("@here deploying now", "alfred"),
         ("name.surname@example.com", "copy"),
         ("echo @", "copy"),
+        ("@term ls -lah ~/Downloads", "terminal"),
+        ("tail -f app.log @term", "terminal"),
+        ("@term", "terminal"),
+        ("@terminal ls", "alfred"),
     ],
 )
 def test_action_of_payload_shape(monkeypatch, payload, action):
@@ -92,6 +96,19 @@ FLOWS = {"tally": "t", "kobold": "kb"}
 )
 def test_flow_of_resolves_trailing_at_word_through_aliases(payload, flow):
     assert flow_of(payload, FLOWS) == flow, "a trailing @word names an Alfred keyword, aliases first"
+
+
+def test_entry_item_for_term_runs_the_command_in_a_terminal():
+    item = entry_item(parse_line("downloads | @term ls -lah ~/Downloads"), FLOWS)
+
+    assert item["variables"] == {"action": "terminal"}, "@term is reserved: it routes to the terminal action"
+    assert item["arg"] == "ls -lah ~/Downloads", "the arg is the command, without the @term"
+    assert item["subtitle"] == "Terminal · ls -lah ~/Downloads", "the subtitle says where the command goes"
+    assert item["mods"]["shift"]["arg"] == "ls -lah ~/Downloads", "shift pastes the bare command"
+    assert item["mods"]["ctrl"]["subtitle"] == "Line 0 of default/ · terminal: ls -lah ~/Downloads", (
+        "ctrl shows the call"
+    )
+    assert item["text"]["copy"] == "@term ls -lah ~/Downloads", "cmd-c copies the payload as written"
 
 
 def test_entry_item_for_flow_hands_the_query_to_alfred():

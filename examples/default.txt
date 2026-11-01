@@ -28,6 +28,10 @@ delany books              | delany @kobold
 lexer task                | parser lexer @tally
 log it                    | @wisp
 
+# @term is reserved: enter runs the rest of the line in a new terminal window that stays open
+downloads                 | @term ls -lah ~/Downloads
+list a folder             | @term ls -lah {{dir=.}}
+
 # text: enter copies
 email work                | name.surname@example.com
 address home              | 221B Baker Street, London NW1 6XE

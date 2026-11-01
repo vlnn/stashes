@@ -6,6 +6,7 @@ Fuzzy keyword search over plain-text stashes you own, as an Alfred workflow.
 - **Act**: ↩ copies the payload, or opens it when it is a URL, a path or an Alfred flow; ⇧↩ pastes it.
 - **Add** by typing: whatever you searched for is always offered as a new entry, so a miss is one ↩ away from being stored.
 - **Run** by typing: a hand-off, a link or a `{{blank}}` typed straight into the field gets a *Run* row next to what it found, acting on the text without storing it.
+- **Terminal**: `@term ls -lah {{dir}}` asks for the folder and runs the listing in a new terminal window that stays open, for everything you would rather watch than copy.
 - **Own the data**: one line per entry in text files you can edit, grep, sync and keep in git. The format is one rule: everything after the first `|` is the payload; the words before it are what you search by first.
 - **Several stashes** when the list gets long: every `name.txt` in the folder is a stash; `st name/` searches one, and a bare `st` searches all of them.
 - **Dated**: every line you add is stamped with the day, in the line itself (`2026-10-26: …`). `st today/`, `st yesterday/`, `st tomorrow/`, `st week/`, `st next-week/`, `st last-month/`, `st year/` and the rest of that grid are views over every stash by that day; nothing is ever moved, rolled or deleted to make them work. `st tomorrow/ dentist ↩` plans a line a day ahead, and the calendar brings it into `today/`.
@@ -115,6 +116,7 @@ notes folder              | ~/notes
 tally open                | alfred://runtrigger/com.anokhin.tally/open/
 
 # hand-offs: enter opens Alfred with the other workflow's keyword (flows = "tally=t kobold=kb wisp=l")
+# @term is reserved: enter runs the rest of the line in a new terminal window
 delany books              | delany @kobold
 lexer task                | parser lexer @tally
 
@@ -203,6 +205,7 @@ What ↩ does depends on the payload:
 | `alfred://runtrigger/<bundle id>/<trigger>/?argument=…` | runs that workflow's external trigger |
 | a path that exists (`~/notes`, `/Users/me/doc.pdf`) | opens it |
 | `text @keyword` or `@keyword text` | opens Alfred with `keyword text`, so another workflow takes over (see below) |
+| `@term command` or `command @term` | runs the command in a new terminal window and leaves it open (see below) |
 | anything with `{{name}}` in it | asks for each name first, then does one of the above with the result (see [Placeholders](#placeholders)) |
 | anything else | copies it to the clipboard |
 
@@ -210,10 +213,10 @@ The subtitle says which: `Open · …` or `→ kobold · delany`. Everything els
 
 | Keys | Action |
 |---|---|
-| ⇧↩ | Copy and paste the payload into the frontmost app |
+| ⇧↩ | Copy and paste the payload into the frontmost app (for `@term`, the bare command) |
 | ⌘↩ | Open this entry's file in your editor at its line (on *Add* or a hint: at the top) |
 | ⌥↩ | Delete this entry: comment it out in its file with the day |
-| ⌃ (hold) | Show the entry's file and line number, and what ↩ will do (for a hand-off, the resolved call: `alfred: kb delany`) |
+| ⌃ (hold) | Show the entry's file and line number, and what ↩ will do (for a hand-off, the resolved call: `alfred: kb delany`; for `@term`, `terminal: ls -lah`) |
 | ⌘C | Copy the payload as written (Alfred's own copy shortcut) |
 | ⌘L | Show the payload in Large Type |
 
@@ -235,6 +238,18 @@ The first hand-off needs a one-time macOS permission (step 4 of [Install](#insta
 Write workflow names instead of keywords by listing aliases in the `flows` variable, for example `tally=t kobold=kb wisp=l`; then `parser lexer @tally` means the same as `parser lexer @t`. The subtitle shows the name as you wrote it (`→ tally · parser lexer`), ⌃ shows the resolved call (`alfred: t parser lexer`), and ⌘C still copies the payload as written.
 
 Only a leading or trailing `@word` counts, so `me@example.com` and `mail me@example.com now` are copied as text. A payload that genuinely starts or ends with an `@handle` (`@here deploying now`) would be taken as a hand-off; ⌘C still copies it, or end the line with a full stop, or put a word before the handle.
+
+### Running a command in a terminal
+
+`@term` is one hand-off Stashes keeps for itself: ↩ on a payload that starts or ends with it opens a **new terminal window** and runs the rest of the payload there, leaving the window open with the output and a shell, so it works for `ls`, `tail -f`, `ssh` and anything else you would rather see than copy. Blanks are filled first, as usual:
+
+```
+downloads     | @term ls -lah ~/Downloads        st dow ↩   →  a Ghostty window with the listing, then a prompt
+logs api      | @term tail -f /var/log/api.log   st logs ↩  →  the log, live
+list a folder | @term ls -lah {{dir=.}}          st list ↩  →  asks for dir, then lists it
+```
+
+The subtitle says `Terminal · ls -lah ~/Downloads`; ⇧↩ pastes the bare command instead, without `@term`. The terminal is Ghostty by default; set another in the `terminal` variable (see [Configuration](#configuration)). `@term` needs no macOS permission, and it cannot be aliased or used as a workflow keyword.
 
 ## Dates and views
 
@@ -420,6 +435,7 @@ Set these in Alfred: open the workflow and press **Configure Workflow…** (the 
 | `max_results` | `50` | How many results Alfred receives. |
 | `python` | `/usr/bin/python3` | Interpreter, 3.9 or newer. Absolute path, no `~`. |
 | `flows` | empty | Aliases for `@word` hand-offs, as `name=keyword` pairs: `tally=t kobold=kb wisp=l`. |
+| `terminal` | `open -na Ghostty.app --args -e {shell} -ic "{command}; exec {shell}"` | Command run by ↩ on a `@term` entry. `{command}` is the payload without `@term`, `{shell}` is `$SHELL`; `; exec {shell}` keeps the window open afterwards. Other terminals: `/Applications/kitty.app/Contents/MacOS/kitty {shell} -ic "{command}; exec {shell}"`, `/Applications/WezTerm.app/Contents/MacOS/wezterm start -- {shell} -ic "{command}; exec {shell}"`. Terminal.app needs AppleScript to run a command, so it is not supported here. |
 | `show_stashes` | off | List every stash on a bare `st`. Typing part of a stash name shows its row either way; a view row needs two letters of its name and is never listed on a bare `st`. |
 
 Alfred runs workflows with a minimal `PATH`, so use the full path of your editor's command line tool. Quote paths with spaces:

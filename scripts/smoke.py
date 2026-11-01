@@ -60,7 +60,7 @@ def main(bundle_path, python):
         with zipfile.ZipFile(bundle_path) as bundle:
             bundle.extractall(bundle_dir)
         scripts = scripts_of(bundle_dir)
-        commands = {"search", "add", "delete", "edit", "open", "alfred", "prompt", "resolve"}
+        commands = {"search", "add", "delete", "edit", "open", "alfred", "prompt", "resolve", "terminal"}
         check(set(scripts) == commands, "the bundle wires every command")
         env = {
             **os.environ,

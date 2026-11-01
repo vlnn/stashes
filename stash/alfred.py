@@ -20,7 +20,16 @@ STASH_ICON = {"path": "stash.png"}
 OPENABLE_SCHEMES = ("http://", "https://", "file://", "alfred://")
 TRAILING_FLOW = re.compile(r"^(?:(?P<text>.*\S)\s+)?@(?P<name>\S+)$")
 LEADING_FLOW = re.compile(r"^@(?P<name>\S+)(?:\s+(?P<text>\S.*))?$")
-LABELS = {"copy": "Copy", "open": "Open", "alfred": "Alfred", "paste": "Paste", "fill": "Fill", "resolve": "Copy"}
+LABELS = {
+    "copy": "Copy",
+    "open": "Open",
+    "alfred": "Alfred",
+    "paste": "Paste",
+    "fill": "Fill",
+    "resolve": "Copy",
+    "terminal": "Terminal",
+}
+TERMINAL = "term"
 INVALID = {"valid": False}
 
 
@@ -41,7 +50,19 @@ def is_payload(query: str) -> bool:
     return PLACEHOLDER.search(query) is not None or action_of(query) != "copy"
 
 
+def is_terminal(payload: str) -> bool:
+    found = flow_of(payload, NO_FLOWS)
+    return found is not None and found[0] == TERMINAL
+
+
+def command_of(payload: str) -> str:
+    _, command = flow_of(payload, NO_FLOWS) or ("", payload)
+    return command
+
+
 def action_of(payload: str) -> str:
+    if is_terminal(payload):
+        return "terminal"
     if flow_of(payload, NO_FLOWS):
         return "alfred"
     if payload.startswith(OPENABLE_SCHEMES) or is_existing_path(payload):
@@ -55,6 +76,8 @@ def is_existing_path(payload: str) -> bool:
 
 
 def arg_of(payload: str, action: str, flows: Flows) -> str:
+    if action == "terminal":
+        return command_of(payload)
     if action == "alfred":
         keyword, text = flow_of(payload, flows)
         return f"{keyword} {text}".rstrip()
@@ -108,6 +131,8 @@ def paste_mod_for(action: str, payload: str) -> Item:
         return fill_then_paste_mod(payload, {})
     if action == "resolve":
         return resolve_then_paste_mod(payload)
+    if action == "terminal":
+        return paste_mod(command_of(payload))
     return paste_mod(payload)
 
 
@@ -156,7 +181,7 @@ def entry_item(
 
 
 def action_detail(action: str, arg: str) -> str:
-    return f"{action}: {arg}" if action == "alfred" else action
+    return f"{action}: {arg}" if action in ("alfred", "terminal") else action
 
 
 def run_item(query: str, flows: Flows, reserved: Values, stash: str = "") -> Item:
@@ -181,6 +206,8 @@ def run_item(query: str, flows: Flows, reserved: Values, stash: str = "") -> Ite
 def subtitle_of(label: str, payload: str, action: str, arg: str) -> str:
     if action == "alfred":
         return flow_subtitle(payload)
+    if action == "terminal":
+        return f"{LABELS[action]} · {arg}"
     if action == "fill":
         return f"{LABELS[action]} {names_of(payload)} · {payload}"
     if payload == label:
@@ -313,7 +340,7 @@ def final_item(template: str, values: Values, finish: str, flows: Flows) -> Item
         "title": result,
         "subtitle": flow_subtitle(result) if action == "alfred" else f"{LABELS[action]} · {result}",
         "text": {"copy": result, "largetype": result},
-        "mods": {"shift": paste_mod(result)},
+        "mods": {"shift": paste_mod_for(action, result)},
         **routed(result, action, flows),
     }
 

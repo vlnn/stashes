@@ -17,6 +17,8 @@ from .snippets import Values
 
 DEFAULT_DB_DIR = "~/.config/stash"
 DEFAULT_EDITOR = "open -t {file}"
+DEFAULT_TERMINAL = 'open -na Ghostty.app --args -e {shell} -ic "{command}; exec {shell}"'
+DEFAULT_SHELL = "/bin/zsh"
 DEFAULT_MAX_RESULTS = 50
 DEFAULT_SHOW_STASHES = False
 TRUE = ("1", "true", "yes", "on")
@@ -43,6 +45,7 @@ class Config(NamedTuple):
     flows: dict[str, str]
     show_stashes: bool = DEFAULT_SHOW_STASHES
     prompt: Prompt = Prompt()
+    terminal: str = DEFAULT_TERMINAL
 
 
 def config_from(env: Mapping[str, str]) -> Config:
@@ -53,6 +56,7 @@ def config_from(env: Mapping[str, str]) -> Config:
         flows=flows_from(env.get("flows") or ""),
         show_stashes=is_true(env.get("show_stashes") or ""),
         prompt=Prompt(env.get("template") or "", json.loads(env.get("filled") or "{}"), env.get("finish") or ""),
+        terminal=env.get("terminal") or DEFAULT_TERMINAL,
     )
 
 
@@ -219,6 +223,15 @@ def open_command(target: str, config: Config) -> None:
     os.execvp("open", ["open", target])
 
 
+def terminal_command(command: str, config: Config) -> str | None:
+    argv = terminal_argv(config.terminal, command, os.environ.get("SHELL") or DEFAULT_SHELL)
+    try:
+        os.execvp(argv[0], argv)
+    except FileNotFoundError:
+        return f"Terminal not found: {argv[0]} (use a full path in the terminal variable)"
+    return None
+
+
 def alfred_command(query: str, config: Config) -> str | None:
     result = subprocess.run(["osascript", *ALFRED_SEARCH, query], capture_output=True, text=True)
     if result.returncode == 0:
@@ -232,6 +245,10 @@ def alfred_command(query: str, config: Config) -> str | None:
 
 def editor_argv(template: str, file: str, line: str) -> list[str]:
     return [part.replace("{file}", file).replace("{line}", line) for part in shlex.split(template)]
+
+
+def terminal_argv(template: str, command: str, shell: str) -> list[str]:
+    return [part.replace("{command}", command).replace("{shell}", shell) for part in shlex.split(template)]
 
 
 Command = Callable[[Sequence[str], Config], Optional[str]]
@@ -250,6 +267,7 @@ COMMANDS: dict[str, Command] = {
     "delete": text_command(delete_command),
     "edit": text_command(edit_command),
     "open": text_command(open_command),
+    "terminal": text_command(terminal_command),
     "alfred": text_command(alfred_command),
     "prompt": text_command(prompt_command),
     "resolve": text_command(resolve_command),

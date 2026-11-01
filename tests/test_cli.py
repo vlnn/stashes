@@ -9,11 +9,13 @@ from stash.cli import (
     DEFAULT_DB_DIR,
     DEFAULT_EDITOR,
     DEFAULT_MAX_RESULTS,
+    DEFAULT_TERMINAL,
     Prompt,
     config_from,
     editor_argv,
     flows_from,
     main,
+    terminal_argv,
 )
 from stash.views import VIEWS
 
@@ -60,7 +62,15 @@ def item_titles(output):
     return [item["title"] for item in json.loads(output)["items"]]
 
 
-DEFAULTS = (os.path.expanduser(DEFAULT_DB_DIR), DEFAULT_EDITOR, DEFAULT_MAX_RESULTS, {}, False, Prompt())
+DEFAULTS = (
+    os.path.expanduser(DEFAULT_DB_DIR),
+    DEFAULT_EDITOR,
+    DEFAULT_MAX_RESULTS,
+    {},
+    False,
+    Prompt(),
+    DEFAULT_TERMINAL,
+)
 
 
 @pytest.mark.parametrize(
@@ -77,12 +87,13 @@ DEFAULTS = (os.path.expanduser(DEFAULT_DB_DIR), DEFAULT_EDITOR, DEFAULT_MAX_RESU
                 "flows": "tally=t",
                 "show_stashes": "1",
             },
-            (os.path.expanduser("~/db"), "code -g {file}:{line}", 9, {"tally": "t"}, True, Prompt()),
+            (os.path.expanduser("~/db"), "code -g {file}:{line}", 9, {"tally": "t"}, True, Prompt(), DEFAULT_TERMINAL),
         ),
         (
             {"template": "ssh {{host}}", "filled": '{"port": "22"}', "finish": "paste"},
-            (*DEFAULTS[:5], Prompt("ssh {{host}}", {"port": "22"}, "paste")),
+            (*DEFAULTS[:5], Prompt("ssh {{host}}", {"port": "22"}, "paste"), DEFAULT_TERMINAL),
         ),
+        ({"terminal": "kitty {shell} -ic {command}"}, (*DEFAULTS[:6], "kitty {shell} -ic {command}")),
     ],
 )
 def test_config_from_environment(env, expected):
@@ -243,6 +254,42 @@ def test_search_resolves_flow_aliases(capsys, env, db_file):
     [item, _] = json.loads(run(capsys, {**env, "flows": "kobold=kb"}, "search", "books"))["items"]
 
     assert item["arg"] == "kb delany", "search should resolve @kobold through the flows variable"
+
+
+@pytest.mark.parametrize(
+    "template, command, argv",
+    [
+        (
+            'open -na Ghostty.app --args -e {shell} -ic "{command}; exec {shell}"',
+            "ls -lah ~/Downloads",
+            ["open", "-na", "Ghostty.app", "--args", "-e", "/bin/zsh", "-ic", "ls -lah ~/Downloads; exec /bin/zsh"],
+        ),
+        ("kitty {shell} -ic {command}", "echo 'it''s'", ["kitty", "/bin/zsh", "-ic", "echo 'it''s'"]),
+    ],
+)
+def test_terminal_argv(template, command, argv):
+    assert terminal_argv(template, command, "/bin/zsh") == argv, (
+        "the command is one argument however it is spelled; {shell} is the user's shell"
+    )
+
+
+def test_terminal_runs_the_configured_command(mocker, capsys, env):
+    execvp = mocker.patch("stash.cli.os.execvp")
+    mocker.patch.dict("stash.cli.os.environ", {"SHELL": "/bin/fish"})
+
+    run(capsys, {**env, "terminal": "kitty {shell} -ic {command}"}, "terminal", "ls -lah")
+
+    assert execvp.call_args_list == [mocker.call("kitty", ["kitty", "/bin/fish", "-ic", "ls -lah"])], (
+        "terminal should hand the process over to the configured terminal"
+    )
+
+
+def test_terminal_reports_a_missing_terminal(mocker, capsys, env):
+    mocker.patch("stash.cli.os.execvp", side_effect=FileNotFoundError)
+
+    assert run(capsys, {**env, "terminal": "nope {command}"}, "terminal", "ls").startswith(
+        "Terminal not found: nope"
+    ), "a bad terminal setting should be explained, not crash"
 
 
 def test_alfred_asks_alfred_to_search(mocker, capsys, env):
@@ -526,6 +573,14 @@ def test_prompt_last_step_opens_urls_and_hands_off_flows(capsys, env, frozen_clo
         "a filled URL opens"
     )
     assert flow["variables"] == {"action": "alfred"} and flow["arg"] == "kb delany", "a filled hand-off hands off"
+
+
+def test_prompt_last_step_sends_a_term_command_to_the_terminal(capsys, env, frozen_clock):
+    [item, _] = prompt(capsys, env, "~/Downloads", "@term ls -lah {{dir}}")
+
+    assert item["variables"] == {"action": "terminal"} and item["arg"] == "ls -lah ~/Downloads", (
+        "a filled @term command runs in a terminal"
+    )
 
 
 def test_prompt_remembers_paste_requested_before_filling(capsys, env, frozen_clock):

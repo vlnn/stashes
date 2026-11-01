@@ -3,7 +3,7 @@
 import plistlib
 import uuid
 
-from stash.cli import DEFAULT_DB_DIR, DEFAULT_EDITOR, DEFAULT_MAX_RESULTS, DEFAULT_SHOW_STASHES
+from stash.cli import DEFAULT_DB_DIR, DEFAULT_EDITOR, DEFAULT_MAX_RESULTS, DEFAULT_SHOW_STASHES, DEFAULT_TERMINAL
 
 PYTHON = 'exec "${python:-/usr/bin/python3}" -S -X utf8 run.py'
 CMD, ALT, CTRL, SHIFT = 1 << 20, 1 << 19, 1 << 18, 1 << 17
@@ -17,13 +17,29 @@ def uid(name):
     return str(uuid.uuid5(uuid.NAMESPACE_URL, f"com.vlnn.stash/{name}")).upper()
 
 
-COPY, PASTE, EDIT, DELETE, ADD, OPEN, ALFRED, PROMPT, RESOLVE, NOTIFY, ROUTE, HOTKEY = map(
-    uid, ("copy", "paste", "edit", "delete", "add", "open", "alfred", "prompt", "resolve", "notify", "route", "hotkey")
+COPY, PASTE, EDIT, DELETE, ADD, OPEN, ALFRED, TERMINAL, PROMPT, RESOLVE, NOTIFY, ROUTE, HOTKEY = map(
+    uid,
+    (
+        "copy",
+        "paste",
+        "edit",
+        "delete",
+        "add",
+        "open",
+        "alfred",
+        "terminal",
+        "prompt",
+        "resolve",
+        "notify",
+        "route",
+        "hotkey",
+    ),
 )
 ROUTES = {
     "add": (ADD, uid("route-add")),
     "open": (OPEN, uid("route-open")),
     "alfred": (ALFRED, uid("route-alfred")),
+    "terminal": (TERMINAL, uid("route-terminal")),
     "fill": (PROMPT, uid("route-fill")),
     "resolve": (RESOLVE, uid("route-resolve")),
     "paste": (PASTE, uid("route-paste")),
@@ -36,7 +52,8 @@ st / sta / stash <words>   search (or press ⌘⌥⌃⇧L); words match in any o
                            label lacks is looked for in the payload, as plain text
                            the last result adds what you typed; type | and it becomes the first
                            ↩ copy, or open a URL/path, or hand "text @keyword" to another
-                           workflow, or add  ⇧↩ paste  ⌘↩ edit  ⌥↩ delete
+                           workflow, or run "@term command" in a new terminal window, or add
+                           ⇧↩ paste  ⌘↩ edit  ⌥↩ delete
 
 Entries are lines of  words | payload ; without a | the whole line is both.
 Every name.txt in the folder is a stash; default.txt is the one you land in.
@@ -44,7 +61,8 @@ st name/ <words>   searches one stash; typing part of a name shows its row, ⇥ 
 {{name}} in a payload asks for a value on ↩, one prompt per name ({{name=default}}
 offers a default, the clipboard is always offered); {{date}}, {{time}} and
 {{clipboard}} fill themselves; the clipboard is read on ↩, never while you type.
-flows: aliases for @words, e.g. "tally=t kobold=kb wisp=l".
+flows: aliases for @words, e.g. "tally=t kobold=kb wisp=l". @term is reserved: the rest of
+the payload runs in a new window of the terminal set in the configuration.
 
 Configure Workflow… sets the stashes folder, the editor, the interpreter,
 hand-off aliases and the number of results.
@@ -87,6 +105,13 @@ SETTINGS = [
         "",
         "Workflow names for @word hand-offs, as name=keyword pairs: tally=t kobold=kb wisp=l",
         "tally=t kobold=kb",
+    ),
+    setting(
+        "terminal",
+        "Terminal",
+        DEFAULT_TERMINAL,
+        "Command run by ↩ on a @term entry, with {command} and {shell} filled in; the window stays open afterwards.",
+        'kitty {shell} -ic "{command}; exec {shell}"',
     ),
     setting(
         "max_results",
@@ -272,6 +297,7 @@ WORKFLOW = {
         run_script(ADD, "add"),
         run_script(OPEN, "open"),
         run_script(ALFRED, "alfred"),
+        run_script(TERMINAL, "terminal"),
         run_script(RESOLVE, "resolve"),
         NOTIFICATION,
     ],
@@ -284,6 +310,7 @@ WORKFLOW = {
         DELETE: [link(NOTIFY)],
         ADD: [link(NOTIFY)],
         ALFRED: [link(NOTIFY)],
+        TERMINAL: [link(NOTIFY)],
         RESOLVE: [link(ROUTE)],
     },
     "uidata": {
@@ -298,8 +325,9 @@ WORKFLOW = {
         ADD: {"xpos": 600, "ypos": 300},
         OPEN: {"xpos": 600, "ypos": 430},
         ALFRED: {"xpos": 600, "ypos": 560},
-        PROMPT: {"xpos": 600, "ypos": 690},
-        RESOLVE: {"xpos": 600, "ypos": 820},
+        TERMINAL: {"xpos": 600, "ypos": 690},
+        PROMPT: {"xpos": 600, "ypos": 820},
+        RESOLVE: {"xpos": 600, "ypos": 950},
         EDIT: {"xpos": 330, "ypos": 430},
         DELETE: {"xpos": 330, "ypos": 560},
         NOTIFY: {"xpos": 870, "ypos": 430},

@@ -137,6 +137,7 @@ def test_every_search_keyword_shares_the_actions(workflow, objects, search_filte
         ("alfred", "run.py alfred"),
         ("fill", "run.py prompt"),
         ("resolve", "run.py resolve"),
+        ("terminal", "run.py terminal"),
     ],
 )
 def test_conditional_routes_actions_to_their_scripts(workflow, objects, conditional, action, command):
@@ -177,7 +178,7 @@ def test_conditional_copies_everything_else(workflow, objects, conditional):
     assert else_target["config"]["autopaste"] is False, "plain enter copies without pasting"
 
 
-@pytest.mark.parametrize("command", ["add", "delete", "edit", "alfred"])
+@pytest.mark.parametrize("command", ["add", "delete", "edit", "alfred", "terminal"])
 def test_command_output_is_shown_as_notification(workflow, objects, command):
     [script] = [item for item in objects.values() if f"run.py {command}" in item["config"].get("script", "")]
     [target] = destinations(workflow, objects, script)

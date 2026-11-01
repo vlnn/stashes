@@ -91,6 +91,18 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
+				<string>C7F7C627-FE57-50A7-AB49-7D2074660B0D</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>sourceoutputuid</key>
+				<string>1DDE3966-D413-580E-A532-2100D6C229D7</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
 				<string>9B493E65-F10D-58A0-B58B-AB12C5C806C1</string>
 				<key>modifiers</key>
 				<integer>0</integer>
@@ -255,6 +267,19 @@
 			</dict>
 		</array>
 		<key>BCF27A11-BFFD-5C9A-AEED-FB0DCFDC9D1B</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>589BBDD8-105A-5AD0-ACB3-A7ACDCC1FC90</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>C7F7C627-FE57-50A7-AB49-7D2074660B0D</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
@@ -616,6 +641,20 @@
 						<key>matchmode</key>
 						<integer>0</integer>
 						<key>matchstring</key>
+						<string>terminal</string>
+						<key>outputlabel</key>
+						<string>terminal</string>
+						<key>uid</key>
+						<string>1DDE3966-D413-580E-A532-2100D6C229D7</string>
+					</dict>
+					<dict>
+						<key>inputstring</key>
+						<string>{var:action}</string>
+						<key>matchcasesensitive</key>
+						<false/>
+						<key>matchmode</key>
+						<integer>0</integer>
+						<key>matchstring</key>
 						<string>fill</string>
 						<key>outputlabel</key>
 						<string>fill</string>
@@ -824,6 +863,29 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
+				<string>exec "${python:-/usr/bin/python3}" -S -X utf8 run.py terminal "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>C7F7C627-FE57-50A7-AB49-7D2074660B0D</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
 				<string>exec "${python:-/usr/bin/python3}" -S -X utf8 run.py resolve "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
@@ -869,7 +931,8 @@ st / sta / stash &lt;words&gt;   search (or press ⌘⌥⌃⇧L); words match in
                            label lacks is looked for in the payload, as plain text
                            the last result adds what you typed; type | and it becomes the first
                            ↩ copy, or open a URL/path, or hand "text @keyword" to another
-                           workflow, or add  ⇧↩ paste  ⌘↩ edit  ⌥↩ delete
+                           workflow, or run "@term command" in a new terminal window, or add
+                           ⇧↩ paste  ⌘↩ edit  ⌥↩ delete
 
 Entries are lines of  words | payload ; without a | the whole line is both.
 Every name.txt in the folder is a stash; default.txt is the one you land in.
@@ -877,7 +940,8 @@ st name/ &lt;words&gt;   searches one stash; typing part of a name shows its row
 {{name}} in a payload asks for a value on ↩, one prompt per name ({{name=default}}
 offers a default, the clipboard is always offered); {{date}}, {{time}} and
 {{clipboard}} fill themselves; the clipboard is read on ↩, never while you type.
-flows: aliases for @words, e.g. "tally=t kobold=kb wisp=l".
+flows: aliases for @words, e.g. "tally=t kobold=kb wisp=l". @term is reserved: the rest of
+the payload runs in a new window of the terminal set in the configuration.
 
 Configure Workflow… sets the stashes folder, the editor, the interpreter,
 hand-off aliases and the number of results.
@@ -917,7 +981,7 @@ hand-off aliases and the number of results.
 			<key>xpos</key>
 			<integer>600</integer>
 			<key>ypos</key>
-			<integer>820</integer>
+			<integer>950</integer>
 		</dict>
 		<key>589BBDD8-105A-5AD0-ACB3-A7ACDCC1FC90</key>
 		<dict>
@@ -952,7 +1016,7 @@ hand-off aliases and the number of results.
 			<key>xpos</key>
 			<integer>600</integer>
 			<key>ypos</key>
-			<integer>690</integer>
+			<integer>820</integer>
 		</dict>
 		<key>B24AF75F-20D9-52B3-9865-7E229D961DC7</key>
 		<dict>
@@ -974,6 +1038,13 @@ hand-off aliases and the number of results.
 			<integer>330</integer>
 			<key>ypos</key>
 			<integer>560</integer>
+		</dict>
+		<key>C7F7C627-FE57-50A7-AB49-7D2074660B0D</key>
+		<dict>
+			<key>xpos</key>
+			<integer>600</integer>
+			<key>ypos</key>
+			<integer>690</integer>
 		</dict>
 		<key>E1E2F735-334C-58B8-8896-AE45835C573C</key>
 		<dict>
@@ -1075,6 +1146,27 @@ hand-off aliases and the number of results.
 			<string>textfield</string>
 			<key>variable</key>
 			<string>flows</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>open -na Ghostty.app --args -e {shell} -ic "{command}; exec {shell}"</string>
+				<key>placeholder</key>
+				<string>kitty {shell} -ic "{command}; exec {shell}"</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Command run by ↩ on a @term entry, with {command} and {shell} filled in; the window stays open afterwards.</string>
+			<key>label</key>
+			<string>Terminal</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>terminal</string>
 		</dict>
 		<dict>
 			<key>config</key>
